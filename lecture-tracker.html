@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📚 수강 기록</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#f5f4f0; --surface:#fff; --surface2:#f0efe9;
+    --border:#e2e0d8; --border2:#ccc9be;
+    --text:#1a1917; --text2:#6b6860; --text3:#9e9b93;
+    --blue:#1a5fb4; --blue-bg:#e8f0fc;
+    --green:#2a7a4b; --green-bg:#e6f4ec;
+    --amber:#8a5a00; --amber-bg:#fdf0d5;
+    --red:#c0392b; --red-bg:#fdecea;
+    --gray-bg:#eeede8;
+    --radius:10px; --radius-sm:6px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:2rem 1rem;}
+  .page{max-width:760px;margin:0 auto;}
+
+  /* Header */
+  .site-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.75rem;padding-bottom:1.25rem;border-bottom:1.5px solid var(--border);}
+  .site-title{font-size:22px;font-weight:700;letter-spacing:-0.5px;}
+  .site-title span{color:var(--blue);}
+  .site-date{font-size:12px;color:var(--text3);font-family:'DM Mono',monospace;}
+
+  /* Tabs */
+  .tabs{display:flex;gap:4px;margin-bottom:1.5rem;border-bottom:1.5px solid var(--border);padding-bottom:0;}
+  .tab{padding:8px 16px;font-size:13px;font-weight:500;cursor:pointer;border:none;background:transparent;color:var(--text2);border-bottom:2px solid transparent;margin-bottom:-1.5px;transition:color 0.15s;}
+  .tab:hover{color:var(--text);}
+  .tab.active{color:var(--blue);border-bottom-color:var(--blue);}
+
+  /* Stats */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1.75rem;}
+  .stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;}
+  .stat-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:6px;}
+  .stat-value{font-size:26px;font-weight:700;font-family:'DM Mono',monospace;}
+
+  /* Add form */
+  .add-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:1.5rem;overflow:hidden;}
+  .add-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;cursor:pointer;user-select:none;}
+  .add-header:hover{background:var(--surface2);}
+  .add-header-title{font-size:14px;font-weight:500;display:flex;align-items:center;gap:8px;}
+  .add-toggle-icon{font-size:18px;color:var(--text3);transition:transform 0.2s;}
+  .add-toggle-icon.open{transform:rotate(45deg);}
+  .add-body{padding:0 18px 18px;display:none;}
+  .add-body.open{display:block;}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+  .form-group{display:flex;flex-direction:column;gap:5px;}
+  .form-group label{font-size:12px;color:var(--text2);font-weight:500;}
+  .form-group input,.form-group select{height:36px;padding:0 10px;font-size:13px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface2);color:var(--text);font-family:'Noto Sans KR',sans-serif;outline:none;transition:border-color 0.15s;}
+  .form-group input:focus,.form-group select:focus{border-color:var(--blue);}
+  .btn-submit{width:100%;height:38px;margin-top:4px;background:var(--text);color:#fff;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:500;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:opacity 0.15s;}
+  .btn-submit:hover{opacity:0.85;}
+
+  /* Filters */
+  .filters{display:flex;gap:8px;margin-bottom:1.25rem;flex-wrap:wrap;}
+  .filters input,.filters select{height:34px;padding:0 12px;font-size:13px;border:1px solid var(--border);border-radius:20px;background:var(--surface);color:var(--text);font-family:'Noto Sans KR',sans-serif;outline:none;cursor:pointer;}
+  .filters input{flex:1;min-width:160px;border-radius:var(--radius-sm);}
+  .filters input:focus{border-color:var(--blue);}
+
+  /* Records */
+  .records{display:flex;flex-direction:column;gap:8px;}
+  .record{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;transition:border-color 0.15s;animation:fadeIn 0.2s ease;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  .record:hover{border-color:var(--border2);}
+  .record-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px;}
+  .record-title{font-size:14px;font-weight:500;line-height:1.4;flex:1;}
+  .record-badges{display:flex;gap:6px;align-items:center;flex-shrink:0;}
+  .badge{font-size:11px;padding:3px 9px;border-radius:20px;font-weight:500;white-space:nowrap;cursor:default;}
+  .badge-subject{background:var(--blue-bg);color:var(--blue);}
+  .badge-status{cursor:pointer;transition:opacity 0.15s;}
+  .badge-status:hover{opacity:0.75;}
+  .badge-done{background:var(--green-bg);color:var(--green);}
+  .badge-wip{background:var(--amber-bg);color:var(--amber);}
+  .badge-todo{background:var(--gray-bg);color:var(--text2);}
+  .btn-del{width:26px;height:26px;border:none;background:transparent;cursor:pointer;border-radius:var(--radius-sm);color:var(--text3);display:flex;align-items:center;justify-content:center;font-size:14px;transition:background 0.15s,color 0.15s;}
+  .btn-del:hover{background:var(--red-bg);color:var(--red);}
+  .record-meta{font-size:12px;color:var(--text2);display:flex;gap:14px;flex-wrap:wrap;margin-bottom:8px;}
+  .record-meta span{display:flex;align-items:center;gap:4px;}
+  .progress-row{display:flex;align-items:center;gap:10px;}
+  .progress-bg{flex:1;height:5px;background:var(--surface2);border-radius:4px;overflow:hidden;}
+  .progress-fill{height:100%;border-radius:4px;transition:width 0.4s ease;}
+  .progress-pct{font-size:12px;font-weight:500;font-family:'DM Mono',monospace;min-width:36px;text-align:right;color:var(--text2);}
+
+  /* History tab */
+  .history-list{display:flex;flex-direction:column;gap:0;}
+  .history-day{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:10px;}
+  .history-day-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--surface);cursor:pointer;user-select:none;}
+  .history-day-header:hover{background:var(--surface2);}
+  .history-day-date{font-size:14px;font-weight:700;font-family:'DM Mono',monospace;color:var(--text);}
+  .history-day-summary{font-size:12px;color:var(--text2);display:flex;gap:12px;}
+  .history-day-body{border-top:1px solid var(--border);background:var(--surface);}
+  .history-item{display:flex;align-items:flex-start;gap:12px;padding:10px 16px;border-bottom:1px solid var(--border);}
+  .history-item:last-child{border-bottom:none;}
+  .history-item-subject{font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500;background:var(--blue-bg);color:var(--blue);white-space:nowrap;flex-shrink:0;margin-top:1px;}
+  .history-item-info{flex:1;}
+  .history-item-title{font-size:13px;font-weight:500;margin-bottom:3px;}
+  .history-item-meta{font-size:12px;color:var(--text2);display:flex;gap:12px;flex-wrap:wrap;}
+  .delta-badge{font-size:11px;font-weight:700;color:var(--green);background:var(--green-bg);padding:1px 7px;border-radius:20px;}
+  .delta-badge.neg{color:var(--red);background:var(--red-bg);}
+
+  /* Empty */
+  .empty{text-align:center;padding:3rem 1rem;color:var(--text3);font-size:14px;}
+  .empty-icon{font-size:36px;margin-bottom:10px;}
+
+  .footer{text-align:center;margin-top:2.5rem;font-size:12px;color:var(--text3);}
+
+  .hidden{display:none!important;}
+
+  @media(max-width:500px){
+    .stats{grid-template-columns:repeat(2,1fr);}
+    .form-grid{grid-template-columns:1fr;}
+    .history-day-summary{flex-direction:column;gap:2px;}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="site-header">
+    <div class="site-title">📚 <span>수강</span> 기록</div>
+    <div class="site-date" id="today-date"></div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('current')">현재 강의</button>
+    <button class="tab" onclick="switchTab('history')">날짜별 기록</button>
+  </div>
+
+  <!-- ===== 현재 강의 탭 ===== -->
+  <div id="tab-current">
+    <div class="stats">
+      <div class="stat"><div class="stat-label">총 강의</div><div class="stat-value" id="st-total" style="color:var(--text)">0</div></div>
+      <div class="stat"><div class="stat-label">완료</div><div class="stat-value" id="st-done" style="color:var(--green)">0</div></div>
+      <div class="stat"><div class="stat-label">수강 중</div><div class="stat-value" id="st-wip" style="color:var(--amber)">0</div></div>
+      <div class="stat"><div class="stat-label">평균 진도</div><div class="stat-value" id="st-avg" style="color:var(--blue)">0%</div></div>
+    </div>
+
+    <div class="add-section">
+      <div class="add-header" onclick="toggleForm()">
+        <div class="add-header-title">➕ 강의 추가</div>
+        <span class="add-toggle-icon" id="add-icon">＋</span>
+      </div>
+      <div class="add-body" id="add-body">
+        <div class="form-grid">
+          <div class="form-group"><label>강의명 *</label><input id="f-title" type="text" placeholder="예: [2027] KICE Anatomy 수학II"></div>
+          <div class="form-group"><label>과목</label><input id="f-subject" type="text" placeholder="수학 / 국어 / 영어 / 사회"></div>
+        </div>
+        <div class="form-grid">
+          <div class="form-group"><label>강사</label><input id="f-instructor" type="text" placeholder="강사명"></div>
+          <div class="form-group"><label>최근 수강일</label><input id="f-date" type="date"></div>
+        </div>
+        <div class="form-grid">
+          <div class="form-group"><label>상태</label>
+            <select id="f-status">
+              <option value="todo">수강 예정</option>
+              <option value="wip" selected>수강 중</option>
+              <option value="done">완료</option>
+            </select>
+          </div>
+          <div class="form-group"><label>현재 강 수</label><input id="f-current" type="number" min="0" placeholder="예: 5"></div>
+        </div>
+        <div class="form-grid">
+          <div class="form-group"><label>전체 강 수</label><input id="f-total" type="number" min="1" placeholder="예: 26"></div>
+          <div class="form-group" style="justify-content:flex-end;padding-top:17px;">
+            <button class="btn-submit" onclick="addRecord()">기록 추가</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="filters">
+      <input id="search" type="text" placeholder="🔍  강의명, 강사, 과목 검색..." oninput="renderCurrent()">
+      <select id="filter-subject" onchange="renderCurrent()">
+        <option value="">전체 과목</option>
+        <option value="수학">수학</option>
+        <option value="국어">국어</option>
+        <option value="영어">영어</option>
+        <option value="사회">사회</option>
+      </select>
+      <select id="filter-status" onchange="renderCurrent()">
+        <option value="">전체 상태</option>
+        <option value="done">완료</option>
+        <option value="wip">수강 중</option>
+        <option value="todo">수강 예정</option>
+      </select>
+    </div>
+
+    <div class="records" id="records-list"></div>
+  </div>
+
+  <!-- ===== 날짜별 기록 탭 ===== -->
+  <div id="tab-history" class="hidden">
+    <div id="history-list"></div>
+  </div>
+
+  <div class="footer">데이터는 이 기기 브라우저에 저장됩니다 · localStorage</div>
+</div>
+
+<script>
+// ── 초기 데이터 (2026-06-07 스냅샷) ──────────────────────────────────
+const INITIAL_RECORDS = [
+  {id:1,  title:"[2027] KICE Anatomy 수학 II",                             subject:"수학", instructor:"김범준", date:"2026-06-01", current:5,  total:26, status:"wip"},
+  {id:2,  title:"[NEW] Starting Block 수학 I",                             subject:"수학", instructor:"김범준", date:"2026-05-28", current:5,  total:32, status:"wip"},
+  {id:3,  title:"[2027] All Of KICE [Predator : 문학]",                    subject:"국어", instructor:"김승리", date:"2026-05-26", current:16, total:38, status:"wip"},
+  {id:4,  title:"[NEW] Starting Block 미적분",                              subject:"수학", instructor:"김범준", date:"2026-05-16", current:22, total:45, status:"wip"},
+  {id:5,  title:"[2027] IMFACT - 사회문화 (문제풀이 전 필수 심화)",         subject:"사회", instructor:"임정환", date:"2026-05-13", current:3,  total:24, status:"wip"},
+  {id:6,  title:"[2027] LIM IT - 사회문화(사회탐구 기준이 될 개념강좌)",    subject:"사회", instructor:"임정환", date:"2026-05-13", current:13, total:30, status:"wip"},
+  {id:7,  title:"[2027] 사회문화 도표특강 100=END",                         subject:"사회", instructor:"임정환", date:"2026-05-09", current:3,  total:20, status:"wip"},
+  {id:8,  title:"[2027] R`gorithm [독해 알고리즘]",                        subject:"영어", instructor:"이명학", date:"2026-05-06", current:2,  total:24, status:"wip"},
+  {id:9,  title:"[2027] 김승리의 선택 [언어와 매체] 시즌1",                subject:"국어", instructor:"김승리", date:"2026-04-18", current:15, total:60, status:"wip"},
+  {id:10, title:"[2027] LIM IT - 생활과 윤리(사회탐구 기준이 될 개념강좌)",subject:"사회", instructor:"임정환", date:"2026-04-24", current:0,  total:32, status:"todo"},
+];
+
+// 날짜별 업데이트 히스토리: [{date, snapshot:[{id,current,total,status}]}]
+const INITIAL_HISTORY = [
+  {
+    date: "2026-06-07",
+    label: "미맥스터디 스크린샷",
+    snapshot: INITIAL_RECORDS.map(r => ({id:r.id, title:r.title, subject:r.subject, current:r.current, total:r.total, status:r.status}))
+  }
+];
+
+const KEY_RECORDS = 'lt_records_v2';
+const KEY_HISTORY = 'lt_history_v2';
+
+function load() {
+  let records, history;
+  try { records = JSON.parse(localStorage.getItem(KEY_RECORDS)); } catch(e){}
+  try { history = JSON.parse(localStorage.getItem(KEY_HISTORY)); } catch(e){}
+  return {
+    records: records || INITIAL_RECORDS.map(r => ({...r, progress: pct(r.current, r.total)})),
+    history: history || INITIAL_HISTORY
+  };
+}
+
+function save() {
+  try { localStorage.setItem(KEY_RECORDS, JSON.stringify(records)); } catch(e){}
+  try { localStorage.setItem(KEY_HISTORY, JSON.stringify(history)); } catch(e){}
+}
+
+function pct(cur, tot) { return tot > 0 ? Math.round(cur / tot * 100) : 0; }
+
+let {records, history} = load();
+
+// ── 날짜 표시 ─────────────────────────────────────────────────────────
+document.getElementById('today-date').textContent =
+  new Date().toLocaleDateString('ko-KR', {year:'numeric', month:'long', day:'numeric', weekday:'short'});
+document.getElementById('f-date').value = new Date().toISOString().slice(0,10);
+
+// ── 탭 전환 ──────────────────────────────────────────────────────────
+function switchTab(tab) {
+  document.getElementById('tab-current').classList.toggle('hidden', tab !== 'current');
+  document.getElementById('tab-history').classList.toggle('hidden', tab !== 'history');
+  document.querySelectorAll('.tab').forEach((el,i) => {
+    el.classList.toggle('active', (i===0 && tab==='current') || (i===1 && tab==='history'));
+  });
+  if (tab === 'history') renderHistory();
+}
+
+// ── 강의 추가 폼 ──────────────────────────────────────────────────────
+function toggleForm() {
+  const body = document.getElementById('add-body');
+  const icon = document.getElementById('add-icon');
+  const open = body.classList.toggle('open');
+  icon.classList.toggle('open', open);
+}
+
+function addRecord() {
+  const title = document.getElementById('f-title').value.trim();
+  if (!title) { document.getElementById('f-title').focus(); return; }
+  const current = parseInt(document.getElementById('f-current').value) || 0;
+  const total   = parseInt(document.getElementById('f-total').value)   || 0;
+  const status  = document.getElementById('f-status').value;
+  records.unshift({
+    id: Date.now(), title,
+    subject:    document.getElementById('f-subject').value.trim(),
+    instructor: document.getElementById('f-instructor').value.trim(),
+    date:       document.getElementById('f-date').value || new Date().toISOString().slice(0,10),
+    current, total, status,
+    progress: total > 0 ? pct(current, total) : (status==='done' ? 100 : 0)
+  });
+  save();
+  ['f-title','f-subject','f-instructor','f-current','f-total'].forEach(id => document.getElementById(id).value='');
+  document.getElementById('f-status').value = 'wip';
+  document.getElementById('add-body').classList.remove('open');
+  document.getElementById('add-icon').classList.remove('open');
+  renderCurrent();
+}
+
+function deleteRecord(id) {
+  if (!confirm('이 강의를 삭제할까요?')) return;
+  records = records.filter(r => r.id !== id);
+  save(); renderCurrent();
+}
+
+function toggleStatus(id) {
+  const r = records.find(r => r.id === id);
+  if (!r) return;
+  const cycle = {todo:'wip', wip:'done', done:'todo'};
+  r.status = cycle[r.status];
+  if (r.status === 'done') { r.progress=100; r.current=r.total; }
+  save(); renderCurrent();
+}
+
+function statusLabel(s){ return {done:'완료', wip:'수강 중', todo:'수강 예정'}[s]||s; }
+function statusClass(s){ return {done:'badge-done', wip:'badge-wip', todo:'badge-todo'}[s]||''; }
+function progressColor(p){ return p>=70?'#2a7a4b': p>=30?'#8a5a00':'#c0392b'; }
+
+// ── 현재 강의 렌더 ────────────────────────────────────────────────────
+function renderCurrent() {
+  const q    = (document.getElementById('search').value||'').toLowerCase();
+  const fs   = document.getElementById('filter-status').value;
+  const fsub = document.getElementById('filter-subject').value;
+
+  const filtered = records.filter(r => {
+    const mq   = !q   || r.title.toLowerCase().includes(q)||(r.subject||'').toLowerCase().includes(q)||(r.instructor||'').toLowerCase().includes(q);
+    const ms   = !fs   || r.status===fs;
+    const msub = !fsub || r.subject===fsub;
+    return mq && ms && msub;
+  });
+
+  const tot  = records.length;
+  const done = records.filter(r=>r.status==='done').length;
+  const wip  = records.filter(r=>r.status==='wip').length;
+  const avg  = tot ? Math.round(records.reduce((s,r)=>s+(r.progress||0),0)/tot) : 0;
+  document.getElementById('st-total').textContent = tot;
+  document.getElementById('st-done').textContent  = done;
+  document.getElementById('st-wip').textContent   = wip;
+  document.getElementById('st-avg').textContent   = avg+'%';
+
+  const container = document.getElementById('records-list');
+  if (!filtered.length) {
+    container.innerHTML='<div class="empty"><div class="empty-icon">📭</div>해당하는 강의가 없습니다.</div>';
+    return;
+  }
+  container.innerHTML = filtered.map(r => {
+    const prog  = r.progress ?? pct(r.current||0, r.total||1);
+    const cur   = r.current ?? 0;
+    const total = r.total   ?? 0;
+    const color = progressColor(prog);
+    return `
+    <div class="record">
+      <div class="record-top">
+        <div class="record-title">${r.title}</div>
+        <div class="record-badges">
+          ${r.subject?`<span class="badge badge-subject">${r.subject}</span>`:''}
+          <span class="badge badge-status ${statusClass(r.status)}" onclick="toggleStatus(${r.id})" title="클릭해서 상태 변경">${statusLabel(r.status)}</span>
+          <button class="btn-del" onclick="deleteRecord(${r.id})" title="삭제">✕</button>
+        </div>
+      </div>
+      <div class="record-meta">
+        ${r.instructor?`<span>👤 ${r.instructor}</span>`:''}
+        ${r.date      ?`<span>📅 최근 수강 ${r.date}</span>`:''}
+        ${total>0     ?`<span>📖 ${cur}강 / ${total}강</span>`:''}
+      </div>
+      <div class="progress-row">
+        <div class="progress-bg"><div class="progress-fill" style="width:${prog}%;background:${color};"></div></div>
+        <span class="progress-pct" style="color:${color}">${prog}%</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── 날짜별 기록 렌더 ──────────────────────────────────────────────────
+function renderHistory() {
+  const container = document.getElementById('history-list');
+  if (!history.length) {
+    container.innerHTML='<div class="empty"><div class="empty-icon">📅</div>아직 날짜별 기록이 없습니다.</div>';
+    return;
+  }
+
+  // 최신 날짜 순 정렬
+  const sorted = [...history].sort((a,b) => b.date.localeCompare(a.date));
+
+  container.innerHTML = sorted.map((day, di) => {
+    // 이전 날짜 스냅샷 (다음 인덱스 = 더 오래된 것)
+    const prevDay   = sorted[di+1];
+    const prevSnap  = prevDay ? prevDay.snapshot : [];
+
+    const subjectCounts = {};
+    day.snapshot.forEach(r => { subjectCounts[r.subject] = (subjectCounts[r.subject]||0)+1; });
+    const subjectSummary = Object.entries(subjectCounts).map(([s,c])=>`${s} ${c}개`).join(' · ');
+    const totalCur  = day.snapshot.reduce((s,r)=>s+(r.current||0),0);
+
+    const dateLabel = formatDate(day.date);
+
+    const itemsHtml = day.snapshot.map(r => {
+      const prev     = prevSnap.find(p => p.id === r.id);
+      const delta    = prev ? (r.current - prev.current) : null;
+      const prog     = pct(r.current, r.total);
+      const color    = progressColor(prog);
+      const deltaHtml = delta !== null && delta !== 0
+        ? `<span class="delta-badge${delta<0?' neg':''}">${delta>0?'+':''}${delta}강</span>`
+        : (delta === 0 ? '' : '');
+      return `
+      <div class="history-item">
+        <span class="history-item-subject">${r.subject||'-'}</span>
+        <div class="history-item-info">
+          <div class="history-item-title">${r.title}</div>
+          <div class="history-item-meta">
+            <span>📖 ${r.current}강 / ${r.total}강 (${prog}%)</span>
+            ${deltaHtml}
+            <span class="badge ${statusClass(r.status)}" style="font-size:11px;padding:1px 7px;">${statusLabel(r.status)}</span>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+
+    return `
+    <div class="history-day">
+      <div class="history-day-header" onclick="toggleHistoryDay(this)">
+        <div>
+          <div class="history-day-date">${dateLabel}</div>
+          ${day.label?`<div style="font-size:12px;color:var(--text3);margin-top:2px;">${day.label}</div>`:''}
+        </div>
+        <div class="history-day-summary">
+          <span>📚 ${day.snapshot.length}개 강의</span>
+          <span>${subjectSummary}</span>
+        </div>
+      </div>
+      <div class="history-day-body">${itemsHtml}</div>
+    </div>`;
+  }).join('');
+}
+
+function toggleHistoryDay(header) {
+  const body = header.nextElementSibling;
+  body.style.display = body.style.display === 'none' ? '' : 'none';
+}
+
+function formatDate(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00');
+  return d.toLocaleDateString('ko-KR', {year:'numeric', month:'long', day:'numeric', weekday:'short'});
+}
+
+renderCurrent();
+</script>
+</body>
+</html>
