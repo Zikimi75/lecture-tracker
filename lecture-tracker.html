@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📚 수강 기록</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f5f4f0;--surface:#fff;--surface2:#f0efe9;--border:#e2e0d8;--border2:#ccc9be;--text:#1a1917;--text2:#6b6860;--text3:#9e9b93;--blue:#1a5fb4;--blue-bg:#e8f0fc;--green:#2a7a4b;--green-bg:#e6f4ec;--amber:#8a5a00;--amber-bg:#fdf0d5;--red:#c0392b;--red-bg:#fdecea;--gray-bg:#eeede8;--radius:10px;--radius-sm:6px;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:2rem 1rem;}
+.page{max-width:900px;margin:0 auto;}
+.site-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.75rem;padding-bottom:1.25rem;border-bottom:1.5px solid var(--border);}
+.site-title{font-size:22px;font-weight:700;letter-spacing:-0.5px;}
+.site-title span{color:var(--blue);}
+.site-date{font-size:12px;color:var(--text3);font-family:'DM Mono',monospace;}
+.tabs{display:flex;gap:4px;margin-bottom:1.5rem;border-bottom:1.5px solid var(--border);}
+.tab{padding:8px 16px;font-size:13px;font-weight:500;cursor:pointer;border:none;background:transparent;color:var(--text2);border-bottom:2px solid transparent;margin-bottom:-1.5px;transition:color 0.15s;}
+.tab:hover{color:var(--text);}
+.tab.active{color:var(--blue);border-bottom-color:var(--blue);}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1.75rem;}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;}
+.stat-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:6px;}
+.stat-value{font-size:26px;font-weight:700;font-family:'DM Mono',monospace;}
+.add-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:1.5rem;overflow:hidden;}
+.add-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;cursor:pointer;user-select:none;}
+.add-header:hover{background:var(--surface2);}
+.add-header-title{font-size:14px;font-weight:500;}
+.add-toggle-icon{font-size:18px;color:var(--text3);transition:transform 0.2s;}
+.add-toggle-icon.open{transform:rotate(45deg);}
+.add-body{padding:0 18px 18px;display:none;}
+.add-body.open{display:block;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.form-group{display:flex;flex-direction:column;gap:5px;}
+.form-group label{font-size:12px;color:var(--text2);font-weight:500;}
+.form-group input,.form-group select{height:36px;padding:0 10px;font-size:13px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface2);color:var(--text);font-family:'Noto Sans KR',sans-serif;outline:none;transition:border-color 0.15s;}
+.form-group input:focus,.form-group select:focus{border-color:var(--blue);}
+.btn-submit{width:100%;height:38px;margin-top:4px;background:var(--text);color:#fff;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:500;cursor:pointer;font-family:'Noto Sans KR',sans-serif;}
+.btn-submit:hover{opacity:0.85;}
+.filters{display:flex;gap:8px;margin-bottom:1.25rem;flex-wrap:wrap;}
+.filters input,.filters select{height:34px;padding:0 12px;font-size:13px;border:1px solid var(--border);border-radius:20px;background:var(--surface);color:var(--text);font-family:'Noto Sans KR',sans-serif;outline:none;cursor:pointer;}
+.filters input{flex:1;min-width:160px;border-radius:var(--radius-sm);}
+.records{display:flex;flex-direction:column;gap:8px;}
+.record{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;transition:border-color 0.15s;animation:fadeIn 0.2s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.record:hover{border-color:var(--border2);}
+.record-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px;}
+.record-title{font-size:14px;font-weight:500;line-height:1.4;flex:1;}
+.record-badges{display:flex;gap:6px;align-items:center;flex-shrink:0;}
+.badge{font-size:11px;padding:3px 9px;border-radius:20px;font-weight:500;white-space:nowrap;cursor:default;}
+.badge-subject{background:var(--blue-bg);color:var(--blue);}
+.badge-status{cursor:pointer;transition:opacity 0.15s;}
+.badge-status:hover{opacity:0.75;}
+.badge-done{background:var(--green-bg);color:var(--green);}
+.badge-wip{background:var(--amber-bg);color:var(--amber);}
+.badge-todo{background:var(--gray-bg);color:var(--text2);}
+.btn-del{width:26px;height:26px;border:none;background:transparent;cursor:pointer;border-radius:var(--radius-sm);color:var(--text3);display:flex;align-items:center;justify-content:center;font-size:14px;}
+.btn-del:hover{background:var(--red-bg);color:var(--red);}
+.record-meta{font-size:12px;color:var(--text2);display:flex;gap:14px;flex-wrap:wrap;margin-bottom:8px;}
+.progress-row{display:flex;align-items:center;gap:10px;}
+.progress-bg{flex:1;height:5px;background:var(--surface2);border-radius:4px;overflow:hidden;}
+.progress-fill{height:100%;border-radius:4px;transition:width 0.4s ease;}
+.progress-pct{font-size:12px;font-weight:500;font-family:'DM Mono',monospace;min-width:36px;text-align:right;}
+
+/* ── 날짜별 기록 탭 ── */
+.history-day{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:10px;}
+.history-day-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--surface);cursor:pointer;user-select:none;}
+.history-day-header:hover{background:var(--surface2);}
+.history-day-date{font-size:14px;font-weight:700;font-family:'DM Mono',monospace;}
+.history-day-summary{font-size:12px;color:var(--text2);display:flex;gap:12px;}
+.history-day-body{border-top:1px solid var(--border);}
+.history-item{display:flex;align-items:flex-start;gap:12px;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--surface);}
+.history-item:last-child{border-bottom:none;}
+.hi-subject{font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500;background:var(--blue-bg);color:var(--blue);white-space:nowrap;flex-shrink:0;margin-top:1px;}
+.hi-info{flex:1;}
+.hi-title{font-size:13px;font-weight:500;margin-bottom:3px;}
+.hi-meta{font-size:12px;color:var(--text2);display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+.delta{font-size:11px;font-weight:700;padding:1px 7px;border-radius:20px;}
+.delta-up{color:var(--green);background:var(--green-bg);}
+.delta-dn{color:var(--red);background:var(--red-bg);}
+.delta-zero{color:var(--text3);background:var(--gray-bg);}
+
+/* ── 비교 탭 ── */
+.compare-controls{display:flex;gap:10px;margin-bottom:1.25rem;align-items:center;flex-wrap:wrap;}
+.compare-controls select{height:36px;padding:0 12px;font-size:13px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font-family:'Noto Sans KR',sans-serif;outline:none;cursor:pointer;}
+.compare-controls label{font-size:13px;color:var(--text2);}
+.compare-vs{font-size:13px;font-weight:700;color:var(--text3);padding:0 4px;}
+
+/* 비교 테이블 */
+.cmp-table-wrap{overflow-x:auto;margin-bottom:1.5rem;}
+.cmp-table{width:100%;border-collapse:collapse;font-size:13px;}
+.cmp-table th{background:var(--surface2);padding:10px 12px;font-size:11px;font-weight:600;color:var(--text2);text-align:left;border-bottom:1.5px solid var(--border);white-space:nowrap;}
+.cmp-table th.num{text-align:center;}
+.cmp-table td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:middle;background:var(--surface);}
+.cmp-table td.num{text-align:center;font-family:'DM Mono',monospace;}
+.cmp-table tr:hover td{background:var(--surface2);}
+.cmp-table tr:last-child td{border-bottom:none;}
+.cmp-title{font-weight:500;max-width:240px;}
+.cmp-bar-cell{min-width:120px;}
+.cmp-bars{display:flex;flex-direction:column;gap:3px;}
+.cmp-bar-row{display:flex;align-items:center;gap:6px;}
+.cmp-bar-label{font-size:10px;color:var(--text3);width:28px;text-align:right;font-family:'DM Mono',monospace;}
+.cmp-bar-bg{flex:1;height:6px;background:var(--surface2);border-radius:4px;overflow:hidden;}
+.cmp-bar-fill{height:100%;border-radius:4px;}
+.bar-a{background:#1a5fb4;}
+.bar-b{background:#e9a846;}
+.cmp-delta-cell{text-align:center;}
+.delta-pill{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;font-family:'DM Mono',monospace;}
+
+/* 비교 요약 카드 */
+.cmp-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1.5rem;}
+.cmp-sum-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;}
+.cmp-sum-label{font-size:11px;color:var(--text3);margin-bottom:6px;}
+.cmp-sum-val{font-size:20px;font-weight:700;font-family:'DM Mono',monospace;}
+.cmp-legend{display:flex;gap:16px;margin-bottom:12px;font-size:12px;align-items:center;}
+.cmp-legend-dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:4px;}
+
+.empty{text-align:center;padding:3rem 1rem;color:var(--text3);font-size:14px;}
+.empty-icon{font-size:36px;margin-bottom:10px;}
+.footer{text-align:center;margin-top:2.5rem;font-size:12px;color:var(--text3);}
+.hidden{display:none!important;}
+
+@media(max-width:600px){
+  .stats{grid-template-columns:repeat(2,1fr);}
+  .form-grid{grid-template-columns:1fr;}
+  .cmp-summary{grid-template-columns:repeat(2,1fr);}
+  .history-day-summary{flex-direction:column;gap:2px;}
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="site-header">
+    <div class="site-title">📚 <span>수강</span> 기록</div>
+    <div class="site-date" id="today-date"></div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('current')">현재 강의</button>
+    <button class="tab" onclick="switchTab('history')">날짜별 기록</button>
+    <button class="tab" onclick="switchTab('compare')">날짜 비교</button>
+  </div>
+
+  <!-- 현재 강의 탭 -->
+  <div id="tab-current">
+    <div class="stats">
+      <div class="stat"><div class="stat-label">총 강의</div><div class="stat-value" id="st-total">0</div></div>
+      <div class="stat"><div class="stat-label">완료</div><div class="stat-value" id="st-done" style="color:var(--green)">0</div></div>
+      <div class="stat"><div class="stat-label">수강 중</div><div class="stat-value" id="st-wip" style="color:var(--amber)">0</div></div>
+      <div class="stat"><div class="stat-label">평균 진도</div><div class="stat-value" id="st-avg" style="color:var(--blue)">0%</div></div>
+    </div>
+    <div class="add-section">
+      <div class="add-header" onclick="toggleForm()">
+        <div class="add-header-title">➕ 강의 추가</div>
+        <span class="add-toggle-icon" id="add-icon">＋</span>
+      </div>
+      <div class="add-body" id="add-body">
+        <div class="form-grid">
+          <div class="form-group"><label>강의명 *</label><input id="f-title" type="text" placeholder="강의명"></div>
+          <div class="form-group"><label>과목</label><input id="f-subject" type="text" placeholder="수학 / 국어 / 영어 / 사회"></div>
+        </div>
+        <div class="form-grid">
+          <div class="form-group"><label>강사</label><input id="f-instructor" type="text" placeholder="강사명"></div>
+          <div class="form-group"><label>최근 수강일</label><input id="f-date" type="date"></div>
+        </div>
+        <div class="form-grid">
+          <div class="form-group"><label>상태</label>
+            <select id="f-status"><option value="todo">수강 예정</option><option value="wip" selected>수강 중</option><option value="done">완료</option></select>
+          </div>
+          <div class="form-group"><label>현재 강 수</label><input id="f-current" type="number" min="0" placeholder="예: 5"></div>
+        </div>
+        <div class="form-grid">
+          <div class="form-group"><label>전체 강 수</label><input id="f-total" type="number" min="1" placeholder="예: 26"></div>
+          <div class="form-group" style="justify-content:flex-end;padding-top:17px;"><button class="btn-submit" onclick="addRecord()">기록 추가</button></div>
+        </div>
+      </div>
+    </div>
+    <div class="filters">
+      <input id="search" type="text" placeholder="🔍  강의명, 강사, 과목 검색..." oninput="renderCurrent()">
+      <select id="filter-subject" onchange="renderCurrent()">
+        <option value="">전체 과목</option><option value="수학">수학</option><option value="국어">국어</option><option value="영어">영어</option><option value="사회">사회</option>
+      </select>
+      <select id="filter-status" onchange="renderCurrent()">
+        <option value="">전체 상태</option><option value="done">완료</option><option value="wip">수강 중</option><option value="todo">수강 예정</option>
+      </select>
+    </div>
+    <div class="records" id="records-list"></div>
+  </div>
+
+  <!-- 날짜별 기록 탭 -->
+  <div id="tab-history" class="hidden">
+    <div id="history-list"></div>
+  </div>
+
+  <!-- 날짜 비교 탭 -->
+  <div id="tab-compare" class="hidden">
+    <div class="compare-controls">
+      <label>기준일</label>
+      <select id="cmp-date-a" onchange="renderCompare()"></select>
+      <span class="compare-vs">vs</span>
+      <label>비교일</label>
+      <select id="cmp-date-b" onchange="renderCompare()"></select>
+    </div>
+    <div id="compare-content"></div>
+  </div>
+
+  <div class="footer">데이터는 이 기기 브라우저에 저장됩니다 · localStorage</div>
+</div>
+
+<script>
+const INITIAL_RECORDS = [
+  {id:1,  title:"[2027] KICE Anatomy 수학 II",                             subject:"수학", instructor:"김범준", date:"2026-06-01", current:5,  total:26, status:"wip"},
+  {id:2,  title:"[NEW] Starting Block 수학 I",                             subject:"수학", instructor:"김범준", date:"2026-05-28", current:5,  total:32, status:"wip"},
+  {id:3,  title:"[2027] All Of KICE [Predator : 문학]",                    subject:"국어", instructor:"김승리", date:"2026-05-26", current:16, total:38, status:"wip"},
+  {id:4,  title:"[NEW] Starting Block 미적분",                              subject:"수학", instructor:"김범준", date:"2026-05-16", current:22, total:45, status:"wip"},
+  {id:5,  title:"[2027] IMFACT - 사회문화 (문제풀이 전 필수 심화)",         subject:"사회", instructor:"임정환", date:"2026-05-13", current:3,  total:24, status:"wip"},
+  {id:6,  title:"[2027] LIM IT - 사회문화(사회탐구 기준이 될 개념강좌)",    subject:"사회", instructor:"임정환", date:"2026-05-13", current:13, total:30, status:"wip"},
+  {id:7,  title:"[2027] 사회문화 도표특강 100=END",                         subject:"사회", instructor:"임정환", date:"2026-05-09", current:3,  total:20, status:"wip"},
+  {id:8,  title:"[2027] R`gorithm [독해 알고리즘]",                        subject:"영어", instructor:"이명학", date:"2026-05-06", current:2,  total:24, status:"wip"},
+  {id:9,  title:"[2027] 김승리의 선택 [언어와 매체] 시즌1",                subject:"국어", instructor:"김승리", date:"2026-04-18", current:15, total:60, status:"wip"},
+  {id:10, title:"[2027] LIM IT - 생활과 윤리(사회탐구 기준이 될 개념강좌)",subject:"사회", instructor:"임정환", date:"2026-04-24", current:0,  total:32, status:"todo"},
+];
+
+const INITIAL_HISTORY = [
+  {date:"2026-06-07", label:"미맥스터디 스크린샷", snapshot:INITIAL_RECORDS.map(r=>({id:r.id,title:r.title,subject:r.subject,current:r.current,total:r.total,status:r.status}))},
+  {date:"2026-06-08", label:"미맥스터디 스크린샷", snapshot:INITIAL_RECORDS.map(r=>({id:r.id,title:r.title,subject:r.subject,current:r.current,total:r.total,status:r.status}))}
+];
+
+const KEY_R = 'lt_records_v2', KEY_H = 'lt_history_v2';
+function loadData() {
+  let r,h;
+  try{r=JSON.parse(localStorage.getItem(KEY_R));}catch(e){}
+  try{h=JSON.parse(localStorage.getItem(KEY_H));}catch(e){}
+  return {
+    records: r || INITIAL_RECORDS.map(r=>({...r,progress:pct(r.current,r.total)})),
+    history: h || INITIAL_HISTORY
+  };
+}
+function save(){
+  try{localStorage.setItem(KEY_R,JSON.stringify(records));}catch(e){}
+  try{localStorage.setItem(KEY_H,JSON.stringify(history));}catch(e){}
+}
+function pct(c,t){return t>0?Math.round(c/t*100):0;}
+function fmtDate(s){const d=new Date(s+'T00:00:00');return d.toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric',weekday:'short'});}
+function fmtShort(s){const d=new Date(s+'T00:00:00');return d.toLocaleDateString('ko-KR',{month:'short',day:'numeric',weekday:'short'});}
+
+let {records, history} = loadData();
+
+document.getElementById('today-date').textContent = new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric',weekday:'short'});
+document.getElementById('f-date').value = new Date().toISOString().slice(0,10);
+
+function switchTab(tab) {
+  ['current','history','compare'].forEach(t=>{
+    document.getElementById('tab-'+t).classList.toggle('hidden', t!==tab);
+  });
+  document.querySelectorAll('.tab').forEach((el,i)=>{
+    el.classList.toggle('active', ['current','history','compare'][i]===tab);
+  });
+  if(tab==='history') renderHistory();
+  if(tab==='compare') initCompare();
+}
+
+function toggleForm(){
+  const b=document.getElementById('add-body'),ic=document.getElementById('add-icon');
+  const o=b.classList.toggle('open'); ic.classList.toggle('open',o);
+}
+
+function addRecord(){
+  const title=document.getElementById('f-title').value.trim();
+  if(!title){document.getElementById('f-title').focus();return;}
+  const current=parseInt(document.getElementById('f-current').value)||0;
+  const total=parseInt(document.getElementById('f-total').value)||0;
+  const status=document.getElementById('f-status').value;
+  records.unshift({id:Date.now(),title,subject:document.getElementById('f-subject').value.trim(),instructor:document.getElementById('f-instructor').value.trim(),date:document.getElementById('f-date').value||new Date().toISOString().slice(0,10),current,total,status,progress:total>0?pct(current,total):(status==='done'?100:0)});
+  save();
+  ['f-title','f-subject','f-instructor','f-current','f-total'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f-status').value='wip';
+  document.getElementById('add-body').classList.remove('open');
+  document.getElementById('add-icon').classList.remove('open');
+  renderCurrent();
+}
+function deleteRecord(id){if(!confirm('삭제할까요?'))return;records=records.filter(r=>r.id!==id);save();renderCurrent();}
+function toggleStatus(id){const r=records.find(r=>r.id===id);if(!r)return;const c={todo:'wip',wip:'done',done:'todo'};r.status=c[r.status];if(r.status==='done'){r.progress=100;r.current=r.total;}save();renderCurrent();}
+function sLabel(s){return{done:'완료',wip:'수강 중',todo:'수강 예정'}[s]||s;}
+function sClass(s){return{done:'badge-done',wip:'badge-wip',todo:'badge-todo'}[s]||'';}
+function pColor(p){return p>=70?'#2a7a4b':p>=30?'#8a5a00':'#c0392b';}
+
+// ── 현재 강의 ──
+function renderCurrent(){
+  const q=(document.getElementById('search').value||'').toLowerCase();
+  const fs=document.getElementById('filter-status').value;
+  const fsub=document.getElementById('filter-subject').value;
+  const filtered=records.filter(r=>{
+    const mq=!q||r.title.toLowerCase().includes(q)||(r.subject||'').toLowerCase().includes(q)||(r.instructor||'').toLowerCase().includes(q);
+    return mq&&(!fs||r.status===fs)&&(!fsub||r.subject===fsub);
+  });
+  const tot=records.length,done=records.filter(r=>r.status==='done').length,wip=records.filter(r=>r.status==='wip').length;
+  const avg=tot?Math.round(records.reduce((s,r)=>s+(r.progress||0),0)/tot):0;
+  document.getElementById('st-total').textContent=tot;
+  document.getElementById('st-done').textContent=done;
+  document.getElementById('st-wip').textContent=wip;
+  document.getElementById('st-avg').textContent=avg+'%';
+  const c=document.getElementById('records-list');
+  if(!filtered.length){c.innerHTML='<div class="empty"><div class="empty-icon">📭</div>해당하는 강의가 없습니다.</div>';return;}
+  c.innerHTML=filtered.map(r=>{
+    const prog=r.progress??pct(r.current||0,r.total||1);
+    const color=pColor(prog);
+    return`<div class="record"><div class="record-top"><div class="record-title">${r.title}</div><div class="record-badges">${r.subject?`<span class="badge badge-subject">${r.subject}</span>`:''}<span class="badge badge-status ${sClass(r.status)}" onclick="toggleStatus(${r.id})">${sLabel(r.status)}</span><button class="btn-del" onclick="deleteRecord(${r.id})">✕</button></div></div><div class="record-meta">${r.instructor?`<span>👤 ${r.instructor}</span>`:''} ${r.date?`<span>📅 ${r.date}</span>`:''} ${r.total>0?`<span>📖 ${r.current}강/${r.total}강</span>`:''}</div><div class="progress-row"><div class="progress-bg"><div class="progress-fill" style="width:${prog}%;background:${color}"></div></div><span class="progress-pct" style="color:${color}">${prog}%</span></div></div>`;
+  }).join('');
+}
+
+// ── 날짜별 기록 ──
+function renderHistory(){
+  const c=document.getElementById('history-list');
+  if(!history.length){c.innerHTML='<div class="empty"><div class="empty-icon">📅</div>기록이 없습니다.</div>';return;}
+  const sorted=[...history].sort((a,b)=>b.date.localeCompare(a.date));
+  c.innerHTML=sorted.map((day,di)=>{
+    const prev=sorted[di+1];const prevSnap=prev?prev.snapshot:[];
+    const subj={};day.snapshot.forEach(r=>{subj[r.subject]=(subj[r.subject]||0)+1;});
+    const subjStr=Object.entries(subj).map(([s,c])=>`${s} ${c}개`).join(' · ');
+    const items=day.snapshot.map(r=>{
+      const p=prevSnap.find(p=>p.id===r.id);
+      const delta=p?(r.current-p.current):null;
+      const prog=pct(r.current,r.total);
+      const dc=delta===null?'':(delta>0?'delta-up':delta<0?'delta-dn':'delta-zero');
+      const dtxt=delta===null?'':(delta>0?`+${delta}강`:delta<0?`${delta}강`:'변화없음');
+      return`<div class="history-item"><span class="hi-subject">${r.subject||'-'}</span><div class="hi-info"><div class="hi-title">${r.title}</div><div class="hi-meta"><span>📖 ${r.current}강/${r.total}강 (${prog}%)</span>${dtxt?`<span class="delta ${dc}">${dtxt}</span>`:''}<span class="badge ${sClass(r.status)}" style="font-size:11px;padding:1px 7px">${sLabel(r.status)}</span></div></div></div>`;
+    }).join('');
+    return`<div class="history-day"><div class="history-day-header" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'':'none'"><div><div class="history-day-date">${fmtDate(day.date)}</div>${day.label?`<div style="font-size:12px;color:var(--text3);margin-top:2px">${day.label}</div>`:''}</div><div class="history-day-summary"><span>📚 ${day.snapshot.length}개 강의</span><span>${subjStr}</span></div></div><div class="history-day-body">${items}</div></div>`;
+  }).join('');
+}
+
+// ── 날짜 비교 ──
+function initCompare(){
+  const dates=[...new Set(history.map(h=>h.date))].sort((a,b)=>b.localeCompare(a));
+  const sa=document.getElementById('cmp-date-a');
+  const sb=document.getElementById('cmp-date-b');
+  const prevA=sa.value, prevB=sb.value;
+  sa.innerHTML=dates.map(d=>`<option value="${d}">${fmtShort(d)}</option>`).join('');
+  sb.innerHTML=dates.map(d=>`<option value="${d}">${fmtShort(d)}</option>`).join('');
+  if(dates.length>=2){
+    sa.value=prevA||dates[1];
+    sb.value=prevB||dates[0];
+  }
+  renderCompare();
+}
+
+function renderCompare(){
+  const dateA=document.getElementById('cmp-date-a').value;
+  const dateB=document.getElementById('cmp-date-b').value;
+  const c=document.getElementById('compare-content');
+
+  if(!dateA||!dateB){c.innerHTML='<div class="empty"><div class="empty-icon">📊</div>비교할 날짜를 선택하세요.</div>';return;}
+  if(dateA===dateB){c.innerHTML='<div class="empty"><div class="empty-icon">🤔</div>서로 다른 날짜를 선택해주세요.</div>';return;}
+
+  const snapA=history.find(h=>h.date===dateA)?.snapshot||[];
+  const snapB=history.find(h=>h.date===dateB)?.snapshot||[];
+
+  // 요약 통계
+  const totalDelta=snapB.reduce((s,r)=>{const a=snapA.find(a=>a.id===r.id);return s+(a?(r.current-a.current):0);},0);
+  const avgA=snapA.length?Math.round(snapA.reduce((s,r)=>s+pct(r.current,r.total),0)/snapA.length):0;
+  const avgB=snapB.length?Math.round(snapB.reduce((s,r)=>s+pct(r.current,r.total),0)/snapB.length):0;
+  const activeLectures=snapB.filter(r=>{const a=snapA.find(a=>a.id===r.id);return a&&r.current>a.current;}).length;
+
+  // 모든 강의 id 합집합
+  const allIds=[...new Set([...snapA.map(r=>r.id),...snapB.map(r=>r.id)])];
+  const rows=allIds.map(id=>{
+    const a=snapA.find(r=>r.id===id);
+    const b=snapB.find(r=>r.id===id);
+    const ref=b||a;
+    const progA=a?pct(a.current,a.total):null;
+    const progB=b?pct(b.current,b.total):null;
+    const delta=a&&b?(b.current-a.current):null;
+    return{id,title:ref.title,subject:ref.subject,a,b,progA,progB,delta};
+  });
+
+  const summaryHtml=`
+  <div class="cmp-summary">
+    <div class="cmp-sum-card"><div class="cmp-sum-label">총 수강 증가</div><div class="cmp-sum-val" style="color:${totalDelta>0?'var(--green)':totalDelta<0?'var(--red)':'var(--text3)'}">${totalDelta>0?'+':''}${totalDelta}강</div></div>
+    <div class="cmp-sum-card"><div class="cmp-sum-label">평균 진도 변화</div><div class="cmp-sum-val" style="color:${avgB>avgA?'var(--green)':avgB<avgA?'var(--red)':'var(--text3)'}">${avgB>avgA?'+':''}${avgB-avgA}%</div></div>
+    <div class="cmp-sum-card"><div class="cmp-sum-label">진도 있는 강의</div><div class="cmp-sum-val" style="color:var(--blue)">${activeLectures}개</div></div>
+  </div>`;
+
+  const legendHtml=`
+  <div class="cmp-legend">
+    <span><span class="cmp-legend-dot" style="background:#1a5fb4"></span>${fmtShort(dateA)}</span>
+    <span><span class="cmp-legend-dot" style="background:#e9a846"></span>${fmtShort(dateB)}</span>
+  </div>`;
+
+  const tableHtml=`
+  <div class="cmp-table-wrap">
+  <table class="cmp-table">
+    <thead>
+      <tr>
+        <th>과목</th>
+        <th>강의명</th>
+        <th class="num">${fmtShort(dateA)}</th>
+        <th class="num">${fmtShort(dateB)}</th>
+        <th class="cmp-bar-cell">진도 비교</th>
+        <th class="num">변화</th>
+      </tr>
+    </thead>
+    <tbody>
+    ${rows.map(r=>{
+      const dClass=r.delta===null?'':(r.delta>0?'delta-up':r.delta<0?'delta-dn':'delta-zero');
+      const dTxt=r.delta===null?'-':(r.delta>0?`+${r.delta}강`:r.delta<0?`${r.delta}강`:'—');
+      const barA=r.progA??0; const barB=r.progB??0;
+      return`<tr>
+        <td><span class="badge badge-subject">${r.subject||'-'}</span></td>
+        <td class="cmp-title">${r.title}</td>
+        <td class="num">${r.a?`${r.a.current}/${r.a.total}강`:'-'}</td>
+        <td class="num">${r.b?`${r.b.current}/${r.b.total}강`:'-'}</td>
+        <td class="cmp-bar-cell">
+          <div class="cmp-bars">
+            <div class="cmp-bar-row"><span class="cmp-bar-label">${barA}%</span><div class="cmp-bar-bg"><div class="cmp-bar-fill bar-a" style="width:${barA}%"></div></div></div>
+            <div class="cmp-bar-row"><span class="cmp-bar-label">${barB}%</span><div class="cmp-bar-bg"><div class="cmp-bar-fill bar-b" style="width:${barB}%"></div></div></div>
+          </div>
+        </td>
+        <td class="cmp-delta-cell"><span class="delta-pill ${dClass}">${dTxt}</span></td>
+      </tr>`;
+    }).join('')}
+    </tbody>
+  </table>
+  </div>`;
+
+  c.innerHTML=summaryHtml+legendHtml+tableHtml;
+}
+
+renderCurrent();
+</script>
+</body>
+</html>
